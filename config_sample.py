@@ -1,0 +1,7 @@
+LOCALE = 'en_US.UTF-8'
+SQLALCHEMY_DATABASE_URI = ""
+BASE_URL="http://amplify.com"
+SECRET_KEY = "ae781we43c-07dd-4c65-bwea59-4cd1wefd05a28f"
+DEBUG = True
+DEBUG_EMAIL_SEND = True
+TEST_EMAIL_ID = ""

@@ -1,0 +1,62 @@
+/*app global css*/
+
+ /*Dialog*/
+.dialog {
+  width: 100%;
+  max-width: 500px;
+}
+
+.salesforce-level-filter{
+  min-width: 200px;
+  max-width: 250px;
+}
+.user-table{
+  width:100%;
+}
+.footer-caption{
+  font-size:small;
+  }
+
+a {
+  text-decoration: none;
+}
+/*.footer-title{*/
+/*  left:0;*/
+/*  shadow:none;*/
+/*}*/
+.footer-right-icon{
+  float:right;
+  height:30px;
+}
+.q-banner{
+  width:98%;
+}
+.icon-color{
+  color:#737373;
+}
+.menubar-icon{
+  height:20px;
+  float:left;
+}
+.flag{
+  font-size:20px;
+}
+.login-box {
+  padding-right:100px;
+}
+.sign-in-header{
+  margin-top:100px;
+  background-color:#F5F5F5;
+}
+.account, .password{
+  font-size:26px;
+  float:right;
+}
+.toolbar-title{
+  height: 71px;
+}
+.login-page-image{
+  float: right;
+  margin-top: 140px;
+  width: 360px;
+}
