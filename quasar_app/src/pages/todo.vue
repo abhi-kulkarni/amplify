@@ -91,7 +91,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-2">
-                                        <img class="float-right q-mb-xs q-mr-sm" id="bulb_img" @click="turnOnOff()" src="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg">
+                                        <q-img class="float-right q-mb-xs q-mr-sm" id="bulb_img" @click="turnOnOff()" src="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg" />
                                     </div>
                                     <div class="col-10">
                                         <q-icon class="q-mb-sm q-ml-md q-mr-sm" name="format_quote"></q-icon><span class="q-mb-md">Quote of the Day</span></span> <q-icon class="q-mb-md q-ml-xs" name="format_quote"></q-icon><br><br>
