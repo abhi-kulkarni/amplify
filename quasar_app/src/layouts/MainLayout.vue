@@ -1,157 +1,152 @@
 <template>
-  <q-layout view="hHh Lpr lFf">
-    <q-layout-header>
-      <q-toolbar
-        :inverted="$q.theme === 'ios'"
-        style="color: #dd4b39"
+  <div class="q-pa-none">
+    <q-layout view="hHh Lpr lFf" :style="{'height': win_height}" class="shadow-2 rounded-borders">
+      <q-header elevated :style="{'background-color':sessionData['appThemeColor']}">
+        <q-toolbar>
+          <q-btn flat @click="miniState = !miniState" round dense icon="menu_book" />
+          <q-toolbar-title class="cursor-pointer"><span @click="home()">Amplify</span></q-toolbar-title>
+          <q-btn dense @click="logout()" flat round icon="login">
+            <q-tooltip>Logout</q-tooltip>
+          </q-btn>
+        </q-toolbar>
+      </q-header>
+  
+       <q-drawer
+        show-if-above
+        :mini="miniState"
+        @mouseover="miniState = false"
+        @mouseout="miniState = true"
+        :width="200"
+        :breakpoint="500"
+        bordered
+        content-class="bg-grey-3"
       >
-<!--        <img class="float-left" src="../assets/company-logo.jpg" style="height:25px;"/>-->
-        <q-btn
-          flat
-          dense
-          round
-          @click="left_drawer_open = !left_drawer_open;left_mini_drawer_open = !left_mini_drawer_open;"
-          aria-label="Menu"
-        >
-          <q-icon name="menu"/>
-        </q-btn>
+        <q-scroll-area :style="{'height': 'calc(100% - 150px)', 'margin-top': !miniState?'150px':'0px', 'border-right': '1px solid #ddd'}">
+          <q-list padding>
+            
+            <q-item :to="'/profile'" :active="$route.name=='/profile'" clickable v-ripple>
+              <q-item-section avatar>
+                <q-avatar size="30px">
+                  <img :src="profile_picture">
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                Profile
+              </q-item-section>
+            </q-item>
 
-        <!--<q-btn-->
-        <!--v-if="left_mini_drawer_open"-->
-        <!--flat-->
-        <!--dense-->
-        <!--round-->
-        <!--@click="left_mini_drawer_open = !left_mini_drawer_open;left_drawer_open = !left_drawer_open"-->
-        <!--aria-label="Menu"-->
-        <!--&gt;-->
-        <!--<q-icon name="menu" />-->
-        <!--</q-btn>-->
+            <q-item :to="'/home'" :active="$route.name=='/home'" clickable v-ripple>
+              <q-item-section avatar>
+                <q-icon name="home" />
+              </q-item-section>
+              <q-item-section>
+                Home
+              </q-item-section>
+            </q-item>
 
-        <q-toolbar-title>
-          <div class="float-right ">
-            <q-btn color="primary text-white capitalize" flat>
-              <q-icon name="account_circle" class="q-pr-sm"></q-icon>
-              {{sessionData['userName']}}
-              <q-popover style="width: 280px;">
-                <q-card>
-                  <q-card-title class="bg-primary text-white">
-                    <div class="text-center"><img class="avatar " src="../assets/icon-user-default.png"
-                                                  style="width: 90px;height: 90px;"/>
-                      <div class="q-caption q-pb-none q-mb-none">{{sessionData['userName']}}</div>
-                      <div class="q-caption q-pt-none q-mt-none">{{ sessionData['userEmail'] }}</div>
-                    </div>
+            <q-item :to="'/todo'" :active="$route.name=='/todo'" clickable v-ripple>
+              <q-item-section avatar>
+                <q-icon name="sticky_note_2" />
+              </q-item-section>
+              <q-item-section>
+                Todo
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
 
-                  </q-card-title>
-                  <q-card-main class="bg-grey-2">
-                    <q-btn v-bind:to="'/changePassword'" class="q-mt-sm no-border text-grey-8" size="sm">
-                      Change Password
-                    </q-btn>
-                    <q-btn @click="logout" class="q-mt-sm float-right no-border text-grey-8" size="sm">
-                      Sign out
-                    </q-btn>
-                  </q-card-main>
-                </q-card>
-              </q-popover>
-            </q-btn>
+        <div id="profile_div" v-if="!miniState">
+        <q-img class="q-pa-none q-ma-none absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
+          <div class="q-pa-none q-ma-none absolute-bottom bg-transparent">
+            <div class="q-mb-md row">
+              <div class="col">
+                <q-avatar size="56px">
+                  <q-img :src="profile_picture"/>
+                </q-avatar>
+              </div>
+              <div class="col q-mt-sm">
+                  Last Login
+              </div>
+            </div>
+            <div class="row text-weight-bold">{{user.first_name}} {{user.last_name}}</div>
+            <div class="row">@{{user.username}}</div>
           </div>
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-layout-header>
+        </q-img>
+        </div>
+      </q-drawer>
 
-    <q-layout-drawer
-      v-model="left_drawer_open"
-      :content-class="$q.theme === 'mat' ? 'bg-grey-2 no-shadow' : null"
-      :overlay="true"
-      :content-style="{zIndex: '4000'}"
-    >
-      <q-list
-        no-border
-        link
-        inset-delimiter
-      >
-        <q-item @click.native="openMiniDrawer" :class="$route.name=='/'?'active':''" to="/" active-class="q-item-no-link-highlighting">
-          <q-item-side icon="dashboard"/>
-          <q-item-main label="Dashboard"/>
-        </q-item>
-
-        <q-item :class="$route.name=='usermanagement'?'active':''" to="/usermanagement" @click.native="openMiniDrawer">
-          <q-item-side icon="group"/>
-          <q-item-main label="User Management"/>
-        </q-item>
-
-      </q-list>
-    </q-layout-drawer>
-    <q-layout-drawer
-      v-model="left_mini_drawer_open"
-      :mini="true"
-      :overlay="false"
-      :content-class="$q.theme === 'mat' ? 'bg-grey-2' : null"
-    >
-      <q-list
-        no-border
-        inset-delimiter
-      >
-        <q-item :class="$route.name=='/'?'active':''" to="/" active-class="q-item-no-link-highlighting">
-          <q-item-side icon="dashboard">
-          </q-item-side>
-          <q-tooltip color="bg-grey-2" anchor="center right" self="center left" :offset="[5, 5]">Dashboard</q-tooltip>
-        </q-item>
-
-        <q-item :class="$route.name=='usermanagement'?'active':''" to="/usermanagement">
-          <q-item-side icon="group">
-          </q-item-side>
-          <q-tooltip anchor="center right" self="center left" :offset="[5, 5]">User Management</q-tooltip>
-        </q-item>
-
-      </q-list>
-    </q-layout-drawer>
-
-
-    <q-page-container class="bg-grey-2" style="padding-left: 60px;">
-      <router-view/>
-    </q-page-container>
-
-    <q-layout-footer v-model="footer_modal" class="no-shadow" style="left: 0">
-      <q-toolbar
-        inverted
-        class="bg-grey-2"
-      >
-        <q-toolbar-title>
-          <div class="float-left text-black caption">
-            <span class="caption" style="font-size: small"><strong>Copyright &copy; 2019
-              <a href="#" style="text-decoration: none">Company Name</a>.</strong> All rights reserved.</span>
-          </div>
-          <div class="float-right">
-          </div>
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-layout-footer>
-  </q-layout>
+      <q-page-container>
+        <router-view/>
+        <!-- <q-page padding>
+          <q-card>
+            <q-card-section>
+              <q-carousel
+                animated
+                v-model="slide"
+                arrows
+                navigation
+                infinite
+              >
+                <q-carousel-slide :name="1" img-src="https://cdn.quasar.dev/img/mountains.jpg" />
+                <q-carousel-slide :name="2" img-src="https://cdn.quasar.dev/img/parallax1.jpg" />
+                <q-carousel-slide :name="3" img-src="https://cdn.quasar.dev/img/parallax2.jpg" />
+                <q-carousel-slide :name="4" img-src="https://cdn.quasar.dev/img/quasar.jpg" />
+              </q-carousel>
+            </q-card-section>
+          </q-card>
+        </q-page> -->
+      </q-page-container>
+    </q-layout>
+  </div>
 </template>
 
 <script>
   import {openURL} from 'quasar';
   import {mapState} from 'vuex';
-
+  import { QSpinnerPie } from 'quasar'
 
   export default {
     name: 'MyLayout',
     data() {
       return {
+        user:{},
+        profile_picture:'',
         left_drawer_open: false,
         left_mini_drawer_open: true,
-        footer_modal: true,
+        slide: 1,
+        miniState:true
       }
     },
     created() {
+      this.getUserData();
     },
     methods: {
       openMiniDrawer() {
         this.left_mini_drawer_open = true;
         this.left_drawer_open = false;
       },
+      home(){
+        this.$router.push('/home');
+      },
+      getUserData() {
+            this.$q.loading.show({
+                spinner: QSpinnerPie,
+                spinnerColor: 'orange-5',
+                spinnerSize: 50
+            });
+            this.$axios.get('/api/get_user_data/' + this.sessionData["user_id"]).then(function (response) {
+                if (response.data.ok) {
+                    this.$q.loading.hide();
+                    this.user= response.data.user_data;
+                    this.profile_picture = this.user.profile_picture;
+                }
+            }.bind(this)).catch(error => {
+                this.$q.loading.hide();
+                this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
+            });
+        },
       logout(){
-        this.$axios.get('/logout').then(function (response) {
+        this.$axios.get('/api/logout').then(function (response) {
           if (response.data.ok)
           {
             this.$store.dispatch('destroyLoginSession');
@@ -162,11 +157,22 @@
     },
     computed: mapState({
       sessionData: (state) => {
-        return {"userName":state.session.user_name,"userEmail":state.session.user_email}
+        return {
+          "user_id":state.session.user_id,
+          "userName":state.session.user_name,
+          "userEmail":state.session.user_email,
+          "appThemeColor": state.session.app_theme_color
+          }
+      },
+      win_height(){
+        return this.$q.screen.height
       }
     })
   }
 </script>
 
 <style>
+  #profile_div {
+    pointer-events:none
+  }
 </style>
