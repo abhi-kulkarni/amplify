@@ -7,12 +7,12 @@
     </q-header>
 
     <div class="row">
-      <div class="offset-1 col-4" style="margin-top: 80px;">
+      <div class="offset-2 col-4" style="margin-right:50px;margin-top: 80px;">
         <div>
           <q-img src="../assets/ninja.png"/>
         </div>
       </div>
-      <div class="q-mt-lg offset-3 col-3">
+      <div class="q-mt-lg offset-1 col-4">
         <q-card class="sign-in-header">
           <q-card-section>
             <div class="text-h6 text-center bg-grey-2">Log In</div>
@@ -24,7 +24,7 @@
                 <q-item-section>
                   <q-item-label class="text-subtitle1">Email / Username</q-item-label>
                     <q-input v-model.trim="username" v-on:keyup.enter="login" class="text-subtitle1">
-                      <q-icon color="grey-6" class="account q-mt-md" name="account_circle"/>
+                      <q-icon color="primary" class="account q-mt-md" name="account_circle"/>
                     </q-input>
                     <q-tooltip>
                       Please enter email address/username
@@ -39,7 +39,7 @@
                     <q-input v-on:keyup.enter="login" class="text-subtitle1" :type="is_pwd ? 'password' : 'text'"  no-pass-toggle v-model.trim="password">
                       <template v-slot:append>
                         <q-icon
-                          color="bg-grey-6"
+                          color="primary"
                           :name="is_pwd ? 'visibility_off' : 'visibility'"
                           class="cursor-pointer"
                           @click="is_pwd = !is_pwd"
@@ -52,7 +52,8 @@
                 </q-item-section>
             </q-item>
            <div class="row q-mt-sm">
-             <div class="offset-3 col-6">
+             <div class="offset-4 col-5">
+               <q-icon size="sm" class="q-mb-xs "  name="lock_open" color="primary"></q-icon>
                <a @click="openResetPasswordModal()" class="q-ml-md cursor-pointer text-primary text-subtitle2">Forgot Password ?
                </a>
              </div>
@@ -60,14 +61,16 @@
 
           </q-card-section>
 
-          <q-item v-if="error" class="bg-red text-white q-ma-md">
-            <q-item-section>{{error}}</q-item-section>
-          </q-item>
-
           <q-card-actions vertical align="center">
-            <q-btn @click="login" icon="send" color="primary" label="Sign In" class="full-width q-mb-sm"></q-btn>
+            <q-btn @click="login" icon="send" color="primary" label="Sign In" class="full-width q-my-xs"></q-btn>
           </q-card-actions>
           <div class="q-ml-md q-pa-none row login-choice">
+            <div class="q-pa-none col">
+                <span>OR</span>
+            </div>
+          </div>
+          <SocialSignUp type="sign_in" @user_login="getSocialLoggedInUser" />
+          <div class="q-mt-sm q-ml-md q-pa-none row login-choice">
             <div class="col">
                 <span>Not a member yet ?</span>
             </div>
@@ -117,7 +120,7 @@
                             <q-input filled :rules="[val => !!val || 'Password is required']" :type="is_reset_pwd ? 'password' : 'text'"  no-pass-toggle v-model.trim="reset_password" label="Enter New Password">
                               <template v-slot:append>
                               <q-icon
-                                color="bg-grey-6"
+                                color="primary"
                                 :name="is_reset_pwd ? 'visibility_off' : 'visibility'"
                                 class="cursor-pointer"
                                 @click="is_reset_pwd = !is_reset_pwd"
@@ -127,7 +130,7 @@
                             <q-input filled :rules="[val => !!val || 'Confirm Password is required']" :type="is_confirm_reset_pwd ? 'password' : 'text'"  no-pass-toggle v-model.trim="confirm_reset_password" label="Confirm Password">
                               <template v-slot:append>
                               <q-icon
-                                color="bg-grey-6"
+                                color="primary"
                                 :name="is_confirm_reset_pwd ? 'visibility_off' : 'visibility'"
                                 class="cursor-pointer"
                                 @click="is_confirm_reset_pwd = !is_confirm_reset_pwd"
@@ -137,7 +140,7 @@
                           </q-card-section>
                           <q-card-actions align="right" class="bg-white">
                             <q-btn class="text-capitalize" color="primary" label="Reset Password"
-                                  @click="changePassword()"></q-btn>
+                                  @click="forgotPassword()"></q-btn>
                             <q-btn class="text-capitalize" color="grey-8" label="Cancel" @click="closeResetPasswordModal"></q-btn>
                           </q-card-actions>
                         </q-card>
@@ -165,6 +168,7 @@
         password: '',
         error: '',
         msg: '',
+        sso_user:{},
         reset_password:'',
         confirm_reset_password:'',
         tab:'email',
@@ -189,6 +193,22 @@
           }
           else{
             this.error=response.data.error;
+            this.$q.notify({message: this.error, color: 'warning', textColor: 'black', icon: 'warning'});
+          }
+        }.bind(this)).catch(error => {
+                this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
+        });
+      },
+      loginFBGoogle(user){
+        let post_data = {};
+        this.$axios.post('/api/login_fb_google_sso',{post_data: user}).then(function (response) {
+          if (response.data.ok) {
+            this.$store.dispatch('setLoginSession',response.data.user_data);
+            this.$router.push('/home')
+          }
+          else{
+            this.error=response.data.error;
+            this.$q.notify({message: this.error, color: 'warning', textColor: 'black', icon: 'warning'});
           }
         }.bind(this)).catch(error => {
                 this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
@@ -229,40 +249,55 @@
             });
           }
       },
-      changePassword() {
+      getSocialLoggedInUser(user){
+          this.sso_user = user;
+          this.loginFBGoogle(this.sso_user)
+      },
+      forgotPassword() {
           let self = this;
           // Minimum six and maximum 10 characters, at least one uppercase letter, one lowercase letter, one number and one special character:
           const passwordRegex = RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,10}$/) 
           
-          if (!passwordRegex.test(this.reset_password)) {
-            self.$q.notify({
+          if(!this.user_email){
+                self.$q.notify({
+                  message: 'Please enter your email first..!',
+                  type: 'warning',
+                  color: 'warning',
+                  textColor: 'black',
+                  icon: 'warning'
+                });
+                this.tab = 'email';
+              }
+              else if (!passwordRegex.test(this.reset_password)) {
+                self.$q.notify({
                   message: 'Password must contain Minimum six and maximum 10 characters, at least one uppercase letter, one lowercase letter, one number and one special character',
                   type: 'warning',
                   color: 'warning',
                   textColor: 'black',
                   icon: 'warning'
-            });
-          
-          }else if(this.reset_password != this.confirm_reset_password){
-              self.$q.notify({
-                  message: 'Password and confirm password should be the same',
-                  type: 'warning',
-                  color: 'warning',
-                  textColor: 'black',
-                  icon: 'warning'
-            });
-          }
-          else{
-              self.$q.loading.show({
-                  spinner: QSpinnerPie,
-                  spinnerColor: 'orange-5',
-                  spinnerSize: 50
-              });
-              this.$axios.post('/api/change_password', {'password': this.reset_password, 'email': this.user_email}).then(function (response) {
+                });
+              }else if(this.reset_password != this.confirm_reset_password){
+                  self.$q.notify({
+                      message: 'Password and confirm password should be the same',
+                      type: 'warning',
+                      color: 'warning',
+                      textColor: 'black',
+                      icon: 'warning'
+                });
+              }
+              else{
+                  self.$q.loading.show({
+                      spinner: QSpinnerPie,
+                      spinnerColor: 'orange-5',
+                      spinnerSize: 50
+                  });
+              this.$axios.post('/api/forgot_password', {'password': this.reset_password, 'email': this.user_email}).then(function (response) {
                   if (response.data.ok) {
                       self.$q.loading.hide(); 
                       self.user_email = '';
                       self.closeResetPasswordModal();
+                      self.username = '';
+                      self.password = '';
                       self.$q.notify({
                           message: 'Password has been Reset Succesfully',
                           type: 'positive',

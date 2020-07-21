@@ -21,26 +21,33 @@ def add_user():
     from models import User
     import json
     import uuid
-
-    post_data = flask.request.json.get('post_data', '')
     
-    user = User()
-    user.id = str(uuid.uuid4())
-    user.password = generate_password_hash(post_data.get('password', ''), salt_length=8)
-    user.created_on = datetime.datetime.now()
-    user.first_name = post_data.get('first_name', '')
-    user.last_name = post_data.get('last_name', '')
-    user.username = post_data.get('username', '')
-    user.email = post_data.get('email', '')
-    user.gender = post_data.get('gender', '')
-    user.country = post_data.get('country', '')
-    user.sso = post_data.get('sso', False)
-    user.profile_picture = post_data.get('profile_picture', '')
-    extra_data = {"app_theme_color":"#0097A7"}
-    user.extra_data = json.dumps(extra_data)
-    db.session.add(user)
-    db.session.commit()
-    return flask.jsonify(ok=True)
+    post_data = flask.request.json.get('post_data', '')
+    validate_email = db.session.query(User).filter(User.email == post_data.get('email', '')).all()
+    if len(validate_email) > 0:
+        if 'sso' in post_data and post_data['sso']:
+            return flask.jsonify(ok=False, error="An Account already exists with this email, you can sign in !")
+        else:
+            return flask.jsonify(ok=False, error="Email already Exists, please try with a different email !")
+    else:
+        user = User()
+        user.id = str(uuid.uuid4())
+        user.password = generate_password_hash(post_data.get('password', ''), salt_length=8)
+        user.created_on = datetime.datetime.now()
+        user.first_name = post_data.get('first_name', '')
+        user.last_name = post_data.get('last_name', '')
+        user.username = post_data.get('username', '')
+        user.email = post_data.get('email', '')
+        user.gender = post_data.get('gender', '')
+        user.country = post_data.get('country', '')
+        user.sso = post_data.get('sso', False)
+        user.provider = post_data.get('provider', '')
+        user.profile_picture = post_data.get('profile_picture', '')
+        extra_data = {"app_theme_color":"#0097A7"}
+        user.extra_data = json.dumps(extra_data)
+        db.session.add(user)
+        db.session.commit()
+        return flask.jsonify(ok=True)
 
 @app.route('/edit_user', methods=['POST'])
 def edit_user():
@@ -49,6 +56,9 @@ def edit_user():
     import json
     
     post_data = flask.request.json.get('post_data', '')
+    validate_email = db.session.query(User).filter(User.email == post_data.get('email', '')).all()
+    if len(validate_email) > 0:
+        return flask.jsonify(ok=False, error="Email already Exists, please try with a different email !")
     user = User.query.get(post_data.get('id', ''))
     user.first_name = post_data.get('first_name', '')
     user.last_name = post_data.get('last_name', '')

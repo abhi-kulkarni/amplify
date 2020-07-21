@@ -64,8 +64,10 @@
                   <q-img :src="profile_picture"/>
                 </q-avatar>
               </div>
-              <div class="col q-mt-sm">
-                  Last Login
+              <div class="col">
+                  <span class="text-white q-mt-lg"> Last Login : </span>
+                  <br>
+                  <span class="text-white"> {{ timeAgo(last_login_time) }} </span>
               </div>
             </div>
             <div class="row text-weight-bold">{{user.first_name}} {{user.last_name}}</div>
@@ -104,6 +106,7 @@
   import {openURL} from 'quasar';
   import {mapState} from 'vuex';
   import { QSpinnerPie } from 'quasar'
+  import moment from 'moment'
 
   export default {
     name: 'MyLayout',
@@ -114,7 +117,8 @@
         left_drawer_open: false,
         left_mini_drawer_open: true,
         slide: 1,
-        miniState:true
+        miniState:true,
+        last_login_time:''
       }
     },
     created() {
@@ -138,6 +142,8 @@
                 if (response.data.ok) {
                     this.$q.loading.hide();
                     this.user= response.data.user_data;
+                    let time = new Date(this.user['last_login'])
+                    this.last_login_time = time.getTime() - ( 5.5 * 60 * 60 * 1000 );
                     this.profile_picture = this.user.profile_picture;
                 }
             }.bind(this)).catch(error => {
@@ -153,6 +159,9 @@
             this.$router.push('/login');
           }
         }.bind(this));
+      },
+      timeAgo(input){
+        return moment(input).fromNow();
       }
     },
     computed: mapState({

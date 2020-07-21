@@ -95,14 +95,14 @@
                     <div class="col-6">
                         <q-item>
                         <q-item-section>
-                            <q-item-label class="text-bold" label>Confirm Password</q-item-label>
-                                <q-input :type="is_confirm_pwd ? 'password' : 'text'" no-pass-toggle v-model="user.confirm_password">
+                            <q-item-label class="text-bold" label>Password</q-item-label>
+                                <q-input :type="is_pwd ? 'password' : 'text'" no-pass-toggle v-model="user.password">
                                 <template v-slot:append>
                                     <q-icon
-                                    color="bg-grey-6"
-                                    :name="is_confirm_pwd ? 'visibility_off' : 'visibility'"
+                                    color="primary"
+                                    :name="is_pwd ? 'visibility_off' : 'visibility'"
                                     class="cursor-pointer"
-                                    @click="is_confirm_pwd = !is_confirm_pwd"
+                                    @click="is_pwd = !is_pwd"
                                     />
                                 </template>
                                 </q-input>
@@ -112,14 +112,14 @@
                     <div class="col-6">
                         <q-item>
                         <q-item-section>
-                            <q-item-label class="text-bold" label>Password</q-item-label>
-                                <q-input :type="is_pwd ? 'password' : 'text'" no-pass-toggle v-model="user.password">
+                            <q-item-label class="text-bold" label>Confirm Password</q-item-label>
+                                <q-input :type="is_confirm_pwd ? 'password' : 'text'" no-pass-toggle v-model="user.confirm_password">
                                 <template v-slot:append>
                                     <q-icon
-                                    color="bg-grey-6"
-                                    :name="is_pwd ? 'visibility_off' : 'visibility'"
+                                    color="primary"
+                                    :name="is_confirm_pwd ? 'visibility_off' : 'visibility'"
                                     class="cursor-pointer"
-                                    @click="is_pwd = !is_pwd"
+                                    @click="is_confirm_pwd = !is_confirm_pwd"
                                     />
                                 </template>
                                 </q-input>
@@ -164,7 +164,7 @@
                         <span>OR</span>
                     </div>
                 </div>
-                <SocialSignUp @user="getSocialLoggedInUser" />
+                <SocialSignUp type="sign_up" @user_signup="getSocialLoggedInUser" />
             </q-card-section>
         </q-card>
     </div>
@@ -264,9 +264,26 @@
             return dataURL
          },
          getSocialLoggedInUser(user){
+            let self = this; 
             this.sso_user = user;
-            this.addUser(this.sso_user)
+            this.toDataUrlSsoImage(self.sso_user['profile_picture'], function(dataUrl) {
+                self.sso_user['profile_picture'] = dataUrl;
+                self.addUser(self.sso_user, 'sso_signup')
+            });
          },
+         toDataUrlSsoImage(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                var reader = new FileReader();
+                reader.onloadend = function() {
+                callback(reader.result);
+                }
+                reader.readAsDataURL(xhr.response);
+            };
+            xhr.open('GET', url);
+            xhr.responseType = 'blob';
+            xhr.send();
+        },
          validateUser(){
             const emailRegex = RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
 
@@ -301,17 +318,26 @@
                     textColor: 'black'
                 });
             }else{
-                this.addUser(this.user)
+                this.addUser(this.user, 'sign_up')
             }
         },
-        addUser(user){
+        addUser(user, type){
             let post_data = {};
+            let self = this;
             post_data = user;
-            post_data['country'] = this.selected_country;
-            post_data['gender'] = this.selected_gender;
-            post_data['profile_picture'] = this.profile_picture_preview;
+            if(type == 'sign_up'){
+                post_data['country'] = this.selected_country;
+                post_data['gender'] = this.selected_gender;
+                post_data['profile_picture'] = this.profile_picture_preview;
+            }
+            self.$q.loading.show({
+                spinner: QSpinnerPie,
+                spinnerColor: 'orange-5',
+                spinnerSize: 50
+            });
             this.$axios.post('/api/add_user', {'post_data': post_data}).then(function (response) {
             if (response.data.ok) {
+                self.$q.loading.hide(); 
                 this.$q.notify({
                     message: 'User Added successfully ',
                     type: 'positive',
@@ -319,42 +345,20 @@
                     textColor: 'black'
                 });
                 this.$router.push('/login');
+            }else{
+                self.$q.loading.hide(); 
+                self.$q.notify({
+                    message: response.data.error,
+                    type: 'warning',
+                    color: 'warning',
+                    textColor: 'black'
+                });
             }
             }.bind(this)).catch(error => {
+                self.$q.loading.hide(); 
                 this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
             });
         }
-    //   getUserData(){
-    //     console.log(this.$route.params.user_id);
-    //     this.$axios.get('/getUserData/'+this.$route.params.user_id).then(function (response) {
-    //       if (response.data.ok)
-    //       {
-    //         this.new_user = response.data.user_data;
-    //       }
-    //     }.bind(this)).catch(error => {
-    //         this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
-    //       });
-    //   },
-    //   editUser(){
-    //     let post_data = {};
-    //     post_data = this.new_user;
-    //     post_data['privilege'] = this.selected_privilege;
-    //     post_data['id'] = this.$route.params.user_id;
-
-    //     this.$axios.post('/edit_user',post_data).then(function (response) {
-    //       if (response.data.ok) {
-    //           this.$q.notify({
-    //           message: 'User Edited successfully ',
-    //           type: 'positive',
-    //           color: 'positive',
-    //           textColor: 'black'
-    //         });
-    //         this.$router.push('/usermanagement');
-    //       }
-    //     }.bind(this)).catch(error => {
-    //         this.$q.notify({message: 'Error Occurred', color: 'negative', textColor: 'black', icon: 'warning'});
-    //       });
-    //   }
     },
     watch:{
         'selected_gender': function(val){

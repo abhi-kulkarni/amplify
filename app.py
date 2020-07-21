@@ -67,12 +67,12 @@ def hello():
 def login():
     from models import User
     import datetime
+    from sqlalchemy import or_
 
     if flask.request.method == "POST" and "username" in flask.request.json["post_data"] and "password" in flask.request.json["post_data"]:
-        users = db.session.query(User).filter(func.lower(flask.request.json["post_data"]["username"]) == func.lower(User.email)).all()
-        if len(users) != 0: # or len(usersbyrepid) != 0
-            if len(users) != 0:
-                user = users[0]
+        users = db.session.query(User).filter(or_(func.lower(flask.request.json["post_data"]["username"]) == func.lower(User.email), func.lower(flask.request.json["post_data"]["username"]) == func.lower(User.username))).all()
+        if len(users) != 0:
+            user = users[0]
             if check_password_hash(user.password, flask.request.json["post_data"]["password"]):
                 flask.session["user_id"] = user.id
                 flask.session["email"] = user.email
@@ -99,6 +99,39 @@ def login():
         else:
             return flask.jsonify(ok=False, error="No such user or incorrect password")
     return flask.jsonify(ok=False, error='')
+
+
+@app.route("/login_fb_google_sso", methods=["POST"])
+def login_fb_google_sso():
+    from models import User
+    import datetime
+
+    if flask.request.method == "POST" and "email" in flask.request.json["post_data"]:
+        user = db.session.query(User).filter(flask.request.json["post_data"]["email"] == User.email, User.provider == flask.request.json["post_data"]["provider"]).first()
+        if user:
+            flask.session["user_id"] = user.id
+            flask.session["email"] = user.email
+            flask.session["first_name"] = user.first_name
+            flask.session["last_name"] = user.last_name
+            flask.session["username"] = user.username
+            flask.session["last_login"] = user.last_login
+
+            temp_dict = dict()
+            temp_dict["userId"] = user.id
+            temp_dict["userEmail"] = user.email
+            temp_dict["userName"] = user.username
+            temp_dict["firstName"] = user.first_name
+            temp_dict["lastName"] = user.last_name
+            temp_dict["last_login"] = str(user.last_login)
+            
+            user.last_login = datetime.datetime.now()
+            db.session.add(user)
+            db.session.commit()
+
+            return flask.jsonify(ok=True, user_data=temp_dict)
+        else:
+            return flask.jsonify(ok=False, error="No such user found")
+
 
 
 @app.route("/get_authenticated_user_information")
@@ -140,8 +173,8 @@ def validate_email():
     else:
         return flask.jsonify(ok=False)
 
-@app.route("/change_password", methods=["POST"])
-def change_password():
+@app.route("/forgot_password", methods=["POST"])
+def forgot_password():
     from models import User
 
     email = flask.request.json.get("email", "")
@@ -153,6 +186,30 @@ def change_password():
     db.session.commit()
     
     return flask.jsonify(ok=True)
+
+@app.route("/validate_password", methods=["POST"])
+def validate_password():
+    from models import User
+
+    user = User.query.get(flask.session["user_id"])
+    if check_password_hash(user.password, flask.request.json.get("current_password","")):
+        return flask.jsonify(ok=True)
+    else:
+        return flask.jsonify(ok=False)
+
+@app.route("/change_password", methods=["POST"])
+def change_password():
+    from models import User
+
+    user = User.query.get(flask.session["user_id"])
+    if user:
+        user.password = generate_password_hash(flask.request.json.get("password",""), salt_length=8)
+        db.session.add(user)
+        db.session.commit()
+        return flask.jsonify(ok=True)
+    else:
+        return flask.jsonify(ok=False)
+
 
 @app.route("/logout", methods= ["GET"])
 def logout():

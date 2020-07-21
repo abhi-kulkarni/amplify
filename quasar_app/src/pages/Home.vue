@@ -34,14 +34,18 @@
           <div class="q-mt-md row">
             <div class="q-ml-lg col-6">
               <div style="wdith:500px; height:500px" id="covid_state_wise_bar_chart">
-
               </div>
             </div>
-            <div class="q-mt-sm q-ml-xl col-5">
-              <div class="q-mt-sm q-ml-md" style="wdith:500px; height:500px" id="covid_state_wise_pie_chart">
-
+            <div style="margin-left:78px" class="q-mt-sm q-ml-xl col-5">
+              <div class="q-mt-sm q-ml-xl" style="wdith:500px; height:500px" id="covid_state_wise_pie_chart">
               </div>
             </div>
+          </div>
+          <div class="row">
+              <div class="col-12">
+              <div style="wdith:500px; height:500px" id="covid_state_wise_line_chart">
+              </div>
+            </div>  
           </div>
         </q-card-section>
       </q-card>
@@ -159,10 +163,13 @@ export default {
         }
         let covid_state_wise_chart_bar_dom = document.getElementById('covid_state_wise_bar_chart');
         let covid_state_wise_chart_pie_dom = document.getElementById('covid_state_wise_pie_chart');
+        let covid_state_wise_line_chart_dom = document.getElementById('covid_state_wise_line_chart');
         echarts.dispose(covid_state_wise_chart_bar_dom);
         echarts.dispose(covid_state_wise_chart_pie_dom);
+        echarts.dispose(covid_state_wise_line_chart_dom);
         let covid_state_chart_bar = echarts.init(covid_state_wise_chart_bar_dom);
         let covid_state_chart_pie = echarts.init(covid_state_wise_chart_pie_dom);
+        let covid_state_chart_line = echarts.init(covid_state_wise_line_chart_dom);
         var itemStyle = {
             normal: {
             },
@@ -175,6 +182,7 @@ export default {
             }
         };
         let covid_state_wise_chart_options_bar = {
+            color:'#228B22',
             backgroundColor: '#eee',
             legend: {
                 align: 'left',
@@ -213,6 +221,7 @@ export default {
         };
 
         let covid_state_wise_chart_options_pie = {
+          color: ['#FFFF00','#FF0000	', '#61a0a8', '#d48265', '#91c7ae','#749f83',  '#ca8622', '#008000','#008000', '#1976D2', '#c4ccd3'],
           title: {
               text: 'Active Cases',
               subtext: selected,
@@ -249,8 +258,47 @@ export default {
               }
           ]
       };
+      let covid_state_wise_chart_options_line = {
+            color:'#1976D2',
+            backgroundColor: '#eee',
+            legend: {
+                align: 'left',
+                left: 10,
+                show:true
+            },
+            tooltip: {},
+            xAxis: {
+                data: x_data,
+                name: 'X Axis',
+                silent: false,
+                axisLine: {onZero: true},
+                splitLine: {show: false},
+                splitArea: {show: false},
+                axisLabel: {
+                  fontWeight: 'bold',
+                  rotate:50
+                }
+            },
+            yAxis: {
+                inverse: false,
+                splitArea: {show: false}
+            },
+            grid: {
+                left: 60,
+                bottom:140
+            },
+            series: [
+                {
+                    name: 'Active Cases '+selected,
+                    type: 'line',
+                    itemStyle: itemStyle,
+                    data: y_data
+                }
+            ]
+        };
         covid_state_chart_bar.setOption(covid_state_wise_chart_options_bar);
         covid_state_chart_pie.setOption(covid_state_wise_chart_options_pie);
+        covid_state_chart_line.setOption(covid_state_wise_chart_options_line)
       })
 
     }

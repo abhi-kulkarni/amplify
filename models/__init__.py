@@ -6,7 +6,7 @@ from sqlalchemy.dialects.mysql import LONGTEXT, TEXT
 
 class User(db.Model):
     id=db.Column(db.String(200),primary_key=True)
-    email=db.Column(db.String(150),nullable=False)
+    email=db.Column(db.String(150),nullable=False, unique=True)
     first_name=db.Column(db.String(150),nullable=False)
     last_name=db.Column(db.String(150),nullable=True)
     username=db.Column(db.String(150),nullable=False)
@@ -17,6 +17,7 @@ class User(db.Model):
     expiry_date=db.Column(db.DateTime,nullable=True)
     sso=db.Column(db.Boolean,nullable=True)
     locked=db.Column(db.Boolean,nullable=True)
+    provider=db.Column(db.String(50),nullable=True)
     profile_picture = db.Column(LONGTEXT())
     last_login=db.Column(db.DateTime)
     extra_data=db.Column(db.TEXT())
