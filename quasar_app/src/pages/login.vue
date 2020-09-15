@@ -22,12 +22,12 @@
           <!--Username/Email -->
             <q-item>
                 <q-item-section>
-                  <q-item-label class="text-subtitle1">Email / Username</q-item-label>
+                  <q-item-label class="text-subtitle1">Email</q-item-label>
                     <q-input v-model.trim="username" v-on:keyup.enter="login" class="text-subtitle1">
                       <q-icon color="primary" class="account q-mt-md" name="account_circle"/>
                     </q-input>
                     <q-tooltip>
-                      Please enter email address/username
+                      Please enter email address
                     </q-tooltip>
                 </q-item-section>
             </q-item>

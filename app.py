@@ -26,7 +26,6 @@ class Config:
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
-        self.encoding = 'latin-1'
         if isinstance(o, Decimal):
             return float(o)
         return super(DecimalEncoder, self).default(o)
@@ -46,35 +45,6 @@ db.init_app(app)
 cors = CORS(app, allow_headers=[
     "Content-Type", "Authorization", "Access-Control-Allow-Credentials", "withCredentials"],
             supports_credentials=True, resources={r"/*": {"origins": "*"}})
-
-
-def requires_auth(*privs):
-    def wrapper(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            # print flask.session
-            if 'user_id' not in flask.session:
-                return unauthorized_abort()
-            else:
-                if len(privs) > 0:
-                    if len(set(privs).intersection(set(flask.session['userPrivilege'])))==0:
-                        return unauthorized_abort()
-                return f(*args, **kwargs)
-
-        return decorated
-
-    return wrapper
-
-
-def unauthorized_abort():
-    if flask.request.is_xhr:
-        return flask.abort(401)
-    else:
-        return flask.redirect(flask.url_for("user.login"))
-
-@app.route("/api/hello", methods=["GET", "POST"])
-def hello():
-    print("Hello")
 
 
 @app.route("/login", methods=["POST"])
