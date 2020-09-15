@@ -8,8 +8,20 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
-import sqlalchemy
 
+env = os.environ.get
+
+
+class Config:
+    LOCALE = env("AMPLIFY_LOCALE", 'en_US.utf8')
+    SECRET_KEY = env("AMPLIFY_SECRET_KEY",
+                     "\xa9\x01\xd2\xc7\x97U\xe7ijo\x1c\xc8\xd8'\x9b-\xf3\xad\x02\x8e\xd2\x16\xc4u\xbfN+')\xfb\x8e\x9a")
+    SQLALCHEMY_DATABASE_URI = env(
+        "AMPLIFY_SQL_ALCHEMY_DATABASE_URI", "mysql://<user>:<password>@localhost/<db>")
+    DEBUG = (env("AMPLIFY_DEBUG", 'True') == 'True')
+    BASE_URL = env("AMPLIFY_BASE_URL", "https://amplify.com")
+    DEBUG_EMAIL_SEND = (env("AMPLIFY_DEBUG_EMAIL_SEND", 'True') == 'True')
+    TEST_EMAIL_ID = env("AMPLIFY_TEST_EMAIL_ID", "abhishekkulkarni706@gmail.com")
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -23,7 +35,9 @@ app = Flask(__name__)
 
 app.json_encoder = DecimalEncoder
 
-app.config.from_pyfile('config.py')
+# app.config.from_pyfile('config.py')
+
+app.config.from_object(Config())
 
 db = SQLAlchemy(app)
 
@@ -88,7 +102,7 @@ def login():
                 temp_dict["firstName"] = user.first_name
                 temp_dict["lastName"] = user.last_name
                 temp_dict["last_login"] = str(user.last_login)
-                
+
                 user.last_login = datetime.datetime.now()
                 db.session.add(user)
                 db.session.commit()
@@ -123,7 +137,7 @@ def login_fb_google_sso():
             temp_dict["firstName"] = user.first_name
             temp_dict["lastName"] = user.last_name
             temp_dict["last_login"] = str(user.last_login)
-            
+
             user.last_login = datetime.datetime.now()
             db.session.add(user)
             db.session.commit()
@@ -140,7 +154,7 @@ def get_authenticated_user_information():
     if "user_id" in flask.session and flask.session["user_id"]:
         from models import User
         user = db.session.query(User).get(flask.session["user_id"])
-        
+
         temp_dict = dict()
         temp_dict["userId"] = user.id
         temp_dict["userEmail"] = user.email
@@ -180,11 +194,11 @@ def forgot_password():
     email = flask.request.json.get("email", "")
     password = flask.request.json.get("password", "")
     user = db.session.query(User).filter(User.email == email).first()
-    user.password = generate_password_hash(password, salt_length=8) 
+    user.password = generate_password_hash(password, salt_length=8)
 
     db.session.add(user)
     db.session.commit()
-    
+
     return flask.jsonify(ok=True)
 
 @app.route("/validate_password", methods=["POST"])
@@ -214,7 +228,7 @@ def change_password():
 @app.route("/logout", methods= ["GET"])
 def logout():
     from flask import session
-    
+
     if "user_id" in flask.session:
         session.clear()
     return flask.jsonify(ok=True)
